@@ -1,0 +1,560 @@
+---
+title: "Final Analysis 207"
+author: "Jack Hammang"
+date: "2024-03-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Abstract.
+In this report we improve on an initial analysis of the Tennessee STAR study on the effect of class size on math scores. The initial analysis found a significant improvement in math scores for smaller classes. In this report we improve the handling of missing data in that initial analysis by comparing alternative methods of handling missing data. We also run additional nonparametric models to address violations of the assumptions of our initial analysis’s model. We find a mixed effect model is an improvement but does not alleviate all heteroscedasticity. The model continues to indicate small classes are associated with higher standardized math scores in 1st grade.
+
+
+
+Introduction
+Project STAR is an investigation into the grade school conditions and their effects on educational outcomes. The effect of class size and teacher to pupil ratios on standardized test scores was a primary concern.
+    In this report we analyze the effects of class sizes on grade 1 standardized math scores. Systematic improvements to education can have lasting economic benefits for individuals. In efforts to improve education, reduction of class size is a solution with strong proponents. However reducing class size is expensive and prior to this study there was limited formal research into the effects of class sizes. Strong evidence that reduced class sizes causes improved student performance is important to justify the funds necessary to make this change. With more information on these effects, well informed decisions can be made in allocating limited school budgets to the greatest effect on student education.
+ Project STAR uses a block randomization scheme. Within schools, students are randomly assigned to one class size (small (12-17), regular (22-30), and regular with an aide) from kindergarten to 3rd grade. Schools were only admitted to the study if they had enough students to enroll classes at each of the experimental class sizes. After third grade the students returned to regular school class size. During these grades, students' test scores (both standardized and curriculum-specific,) were measured. Other possibly influential factors were also measured. These included teacher’s years of experience, school locations (rural vs urban), and student involvement in government programs, among other things.
+    The design of the study should allow us to differentiate the effects of class size on math scores, however there are some issues which need to be addressed. With every class size available at each school, students at different schools have roughly equal probability of being assigned any treatment (class size.) This is an important assumption when estimating causal effects from a randomized trial. However in 4 out of 72 schools there is no regular with aide class size group. This undermines the assumption of equal probability of treatment assignment. Without this assumption it undermines any causal conclusions. This will need to be addressed in the final model.
+Due to the reality of running this experiment on school children, there are limitations on the studies ability to truly randomize, as well as to maintain treatment assignments.  Children could not randomly be assigned to schools, as this would cause undue hardship on them and their family. Given this constraint, the randomized block design is the best random design. Though there are limitations, this is a strong choice of model, as it allows for a degree of randomization.
+
+Caveats 
+In our initial analysis, we analyzed a simple two way factor effect model, but this model failed to adequately incorporate some of the complexities of this data set. This model indicated that small classes likely achieved higher math scores in grade 1.
+There were some issues concerning missing data. Although the study was set up so each school participating would have at least one class at each of the three class size levels, this was not true in all cases. Furthermore, the math scores for some students were not gathered. It is not clear that either of these cases of missing data are random patterns and further investigation is required.
+In the case of the missing math scores for individual students. The initial analysis dropped all missing observations. This was done because the proportion of missing scores was small (231/6829), and the missing scores were assumed to be missing completely at random. However we did not investigate the degree to which data was missing at random. Although the missing data is not highly prevalent, it's possible that by dropping it we are removing more of some subpopulations than others. It's not clear that the distribution of math scores in those subpopulations are the same as the greater distribution. By dropping the values we may create a non-representative sample, and introduce bias into our model. In this report we aim to more thoroughly investigate the nature of missing data in this data set.  
+Four of the 72 schools participating in this study only enrolled small and regular class sizes (no regular with aide class size.) In our initial analysis, we fit a two way fixed effect anova.  In this model the missing cells are not a problem for estimating factor effect levels. In the context of this experimental design, they also undermine randomization, which complicates inferences on causal effect. Assuming these classes are missing completely at random, simply dropping these schools from our analysis would improve our estimation of causal effect. It is not clear why these classes are missing. Given the low prevalence of missing classes, we assume it is ignorable in this analysis
+Another caveat to our initial analysis is noncompliance. 10 out of 124 small classes had a class size above the definition (more than 17), while  63 out of 215  classes at the regular or regular with aide treatment had fewer than 22 students. Both of these represent a large portion of the total experimental units (~8% for small and ~29% for regular classes.) It is common for students to leave class and join other ones through a school year, for numerous reasons, and the participation in this study did not stop this practice. Non-compliance was ignored in the initial analysis and all observations were treated as having received their assigned treatment. However this non-compliance may bias the estimated effects of the assignments, and also change the confidence intervals for our statistics. A strategy to address non compliance is to investigate covariates associated with non compliance, and include those variates in the final model. Alternatively one could include an additional variable in the model which measles non compliance. It is believed that issues of non-compliance in block-randomized trials can cause the estimates of treatment factor effect to be underestimated (Moorebeek and Schie 2019). Since class size treatment is still found to have a significant factor effect with a model that does not account for non compliance, we believe this does not undermine our results. Although an investigation into non-compliance would likely add statistical power to our tests of significance, and decrease the variance in our estimators, we do not further investigate this issue in this analysis.
+Another issue is violations of our models assumptions. The initial model showed significant heteroscedasticity and non-normality of the error terms. The residual analysis of our initial model showed significant heterogeneity in the error terms. A Levene test was run on the residuals, which rejected the null hypothesis that residuals were of equal variance for all school id levels (alpha of 0.05,) . Unequal variance in the error terms is a violation of an assumption of our initial model. The heteroscedasticity could decrease the precision of our estimates. The decreased precision is not well accounted for, meaning our model may underestimate the possibility of error. This increases the probability of incorrect conclusions. The model also showed non-normality of the residuals. A shapiro-wilk test (alpha of 0.05,) rejected the null hypothesis that the residuals were normally distributed. This suggests that the error terms are not normally distributed, which violates one of the assumptions of our test. The violation of the normality assumption will affect the significance of our conclusions, and it will affect power levels.
+We plan to address both these violations of assumptions by fitting a rank test. A rank test eliminates the assumption that errors are normally distributed with equal variance. The same conclusions under this alternative assumption would support the conclusion of the initial model. We therefore plan to fit a rank test on our model to investigate the effects of model assumptions on our conclusions.
+
+
+4 ) Data Exploration
+We visualize the distribution of all variables of interest using bar graphs and histograms. The vast majority of teachers are female. The career ladder position of teachers is dominated by group 4. Teacher race is heavily skewed towards caucasian. Teacher highest degree is dominated by the lowest two values. Teacher’s years of experience is skewed right. Student gender is uniform. Student race is dominated by caucasian and black students. Student recommendation is much more common than not recommendation. Student free lunch status is evenly distributed. Urbanicity shows a score of 3 is most common, and 4 is least common, but all values are represented. These trends all hold when data is aggregated into teacher id levels. 
+math scores student distributions across the three class sizes Were visualized. The small class size features a higher distribution of the math scores than the other two, although there is significant overlap.
+We attempt to explore the missing data. By comparing distributions of the whole data set to those of the data with missing math scores, we see some differences. Notably, the means of free lunch status (1.48 vs 1.28, respectively [where 1 is no free lunch status and 2 is free lunch]) and the means of the promoted to 2nd grade status (1.11 vs 1.33 respectively [where 1 is a recommendation to promote, 2 is not.]) differ between the whole data set and the data with missing math scores. This evidence suggests missing math scores are associated with other variables in the data set. This undermines the hypothesis that data is MCAR. If the data is not MCAR, the likelihood of a missing math score is associated with other variables. If the data is Missing at Random (MAR), it is associated solely with other variable that were measured in this dataset (ie. promotion to second grade.).
+Since there are signs that missing math scores may be associated with other variables in our data set, we wish to test the significance of this. We will fit a logical regression on an indicator of missing math scores. The response variable is an indicator for missing math scores. The response is predicted based on student urban score, student class size assignment, teacher gender, teacher career level, teacher years of experience, student gender,student race, student promotion to second grade status, student participation in the free lunch program. A summary of the regression shows a significant p value < 0.05 for some student races, as well as for student promotion to second grade status, and student free lunch status.
+ By including these variables in our model, we would then account for some of the confounding bias that dropping the missing data may have introduced. However our model analyzes the data at an aggregated class level, where these variables do not apply directly. Imputation of math scores is also an option, however the statistical implications of recreating missing data are difficult to determine. Our best option is to impute data based on the math scores of these specified variables in a worst case scenario, and ensure that the conclusions of our original data set remain the same. If these students are more likely to have missing data, and also less likely to be affected by class size, we should impute a value based on these variables as well as school id, not include class size assignment in our imputation. We can then compare results of this with our original model.
+The distributions of the teacher-median math scores across classroom size show a higher sample mean score (~540) for the small class size vs regular (~525) and regular with aide (~530). Further examinations with a violin plot shows a second peak in the distribution below the mean in the regular with aide group. Comparing these same distribution of the  imputed data set we see the same trend. Additionally The lower tail of the regular with aid and the upper tail of the small class shrink with the imputed data set.
+the teacher median math score distributions plotted against school id (in ranked order). Note averages ranges from ~490 to ~575. This range is much wider than the differences we see between class groups. School id will likely need to be included in our model in order to account for this larger variability.
+
+
+
+```{r,echo=F,results=F,message=F, warning=FALSE}
+##load data
+library(dplyr)
+library(MASS)
+library(tidyverse)
+library(ggplot2)
+library(stats)
+library(car)
+library(haven)
+library(lsmeans)
+data <- read_sav("STAR_Students.sav")
+```
+
+
+```{r,echo=F,results=F,message=F, warning=F}
+#eliminate varibles outside of out analysis
+df_raw <- subset(data, select = c(g1schid, g1surban, g1tchid, g1classsize, g1tmathss, FLAGSG1, flagg1, g1classtype , g1tgen, g1trace, g1thighdegree, g1tcareer, g1tyears, gender, race, g1promote, g1freelunch ))
+                 
+#rename variables for ease of use
+
+names(df_raw) <- c("schoolid1", "urban", "teacherid1", "classsize", "math1", "inSTAR1", "avSTAR1", "star1", "tgender", "trace", "tdegree", "tcareer", "tyears", "sgender", "srace", "promote", "lunch" )
+
+
+barplot(table(df_raw$urban), ylab = "Frequency", main = "Urbanicity")
+barplot(table(df_raw$star1), ylab = "Frequency", las = 2, main = "class size")
+barplot(table(df_raw$tgender), ylab = "Frequency", main = "Teacher Gender")
+barplot(table(df_raw$trace), ylab = "Frequency", main = "Teacher Race")
+barplot(table(df_raw$tdegree), ylab = "Frequency", main = "Teacher Highest Degree")
+barplot(table(df_raw$tcareer), ylab = "Frequency", main = "Teacher Career")
+hist(df_raw$tyears, col = "grey", main = "teacher years exp", xlab = NULL)
+barplot(table(df_raw$sgender), ylab = "frequency", main = "student gender")
+barplot(table(df_raw$srace), ylab = "frequency", main = "student race")
+barplot(table(df_raw$promote), ylab = "frequency", main = "student promotion")
+barplot(table(df_raw$lunch), ylab = "frequency", main = "student lunch status")
+#df$star1 <- as.factor(df$star1)
+##eliminate observations for fdor students that were not in the star program in grade 1
+df_na <- subset(df_raw, df_raw$inSTAR1 == 1)
+
+
+##compare distributions of missing values to the larger data set
+summary(df_na)
+na_rows <- df_na[is.na(df_na$math1), ]
+summary(na_rows)
+
+df_na$missing <- ifelse(is.na(df_na$math1), 1, 0)
+
+
+
+mod.miss.lg<-glm(
+    as.factor(missing)~
+                as.factor(urban)+ 
+                as.factor(star1)+ as.factor(tgender) + as.factor(tcareer) + tyears + as.factor(sgender) + as.factor(srace) + as.factor(promote) + as.factor(lunch)
+               ,
+    data=df_na,
+    
+               family="binomial")
+
+
+
+#eliminte observations with missing values
+#df = df %>% drop_na(schoolid1)
+#summary(df)
+summary(mod.miss.lg)
+
+ggplot(df_raw, aes(x = as_factor(promote), y = math1)) + geom_boxplot() + ggtitle("Math Scores by promote status types")
+
+ggplot(df_raw, aes(x = as_factor(lunch), y = math1)) + geom_boxplot() + ggtitle("Math Scores by lunch types")
+
+
+ggplot(df_raw, aes(x = as_factor(srace), y = math1)) + geom_boxplot() + ggtitle("Math Scores by student race types")
+
+ggplot(df_raw, aes(x = as_factor( sgender), y = math1)) + geom_boxplot() + ggtitle("Math Scores by student gender types")
+
+
+
+
+##Explore noncompliance
+
+ df.small<-subset(df_na, star1== 1)
+ df.reg <-subset(df_na, star1==2)
+ df.reg2 <-subset(df_na, star1==3)
+
+#merge all data frames in list
+df.reg<- rbind(df.reg,df.reg2)
+
+
+df.small.nc <-subset(df.small, classsize > 17)
+df.reg.nc <-subset(df.reg, classsize < 22)
+
+
+
+
+```
+
+
+
+```{r,echo=F,results=F,message=F, warning=F}
+##drop observations with missing math scores
+
+df = df_na %>% drop_na(math1)
+
+summary(df)
+
+ggplot(df, aes(x = as_factor(star1), y = math1)) + geom_boxplot() + ggtitle("Math Scores by STAR class types")
+
+
+```
+
+```{r,echo=F,results=F,message=F, warning=F}
+
+#impute missing scores with median group scores
+df_na.class.med<- df_na %>%  group_by(srace, lunch, promote, schoolid1) %>%  mutate_at(vars(math1), ~replace_na(.,median(., na.rm = TRUE)))
+
+
+```
+***
+
+
+***
+
+```{r,echo=F,results=F,message=F, warning=F}
+
+
+#average scores of same teacher
+df = df %>% group_by(schoolid1, urban, teacherid1, star1, tgender, trace, tdegree, tcareer,tyears, classsize ) %>% summarise(tmath1 = median(math1)) 
+
+
+
+##imputate missing scores with median class scor
+df.c = df_na.class.med %>% group_by(schoolid1, urban, teacherid1, star1, tgender, trace, tdegree, tcareer,tyears ) %>% summarise(tmath1 = median(math1)) 
+
+summary(df)
+
+ggplot(df, aes(x = as_factor(star1), y = tmath1)) + geom_violin()
+ggplot(df.c, aes(x = as_factor(star1), y = tmath1)) + geom_violin()
+
+
+barplot(table(df$urban), ylab = "Frequency", main = "Urbanicity")
+barplot(table(df$star1), ylab = "Frequency", las = 2, main = "class size")
+barplot(table(df$tgender), ylab = "Frequency", main = "Teacher Gender")
+barplot(table(df$trace), ylab = "Frequency", main = "Teacher Race")
+barplot(table(df$tdegree), ylab = "Frequency", main = "Teacher Highest Degree")
+barplot(table(df$tcareer), ylab = "Frequency", main = "Teacher Career")
+hist(df$tyears, col = "grey", main = "teacher years exp", xlab = NULL)
+
+
+```
+
+
+
+```{r,echo=F,results=F,message=F, warning=F}
+
+
+
+df.rankedschl = df
+df.rankedschl$schoolid1 <- with(df.rankedschl, reorder(schoolid1 , tmath1, median , na.rm=T)) ##https://www.statology.org/reorder-boxplot-in-r/
+
+ggplot(df.rankedschl, aes(x= schoolid1, y= tmath1)) + geom_boxplot() +
+    theme(text = element_text(size=8),
+        axis.text.x = element_text(angle=90, hjust=1)) +ggtitle("Teacher Mean Math score distributions by school")
+```
+
+
+
+***
+
+Data Analysis
+
+***
+
+
+
+Model
+
+In order to obtain one measure of math scores for each teacher, we will use the median math1 score for all students in a class. Median is easily interpretable. Median is also a good choice since the distributions of math scores within each specific class is difficult to compare across 300+ groups. Medians are less likely to be skewed by extreme values.
+We will fit a mixed effect model on the data. The response variable will be teacher-median math scores. Star class size assignments will be a fixed effect with three levels, while school id will be a random effect. This is a better model choice than fixed effects for both school id and class size. By modeling school id as a random effect we will alleviate several issues. It is no longer necessary to estimate a factor effect for each level of school id. The differences between specific schools are not of interest to the study. Furthermore, estimating them individually added constraints on our model. By solely estimating the variance of the random school id term, we increase the efficiency of our model. This also reduces the issue of heteroscedasticity in the residuals.
+
+In order to address the issues of missing data. We will fit the models twice. Once on the data set where students with missing 1st grade standardized math scores are dropped. Assuming the data is missing completely at random and the proportion of missing values is small, this wont bias our results. However, given the evidence that there may be some measured variables that are associated with missing math scores, we will also fit the model on a data set where missing data is imputed. The imputed value is the median of a group determined by student school, race, promotion status, and free lunch status. This imputed data attempts to recreate a worse case scenario, where dropping missing data excludes important subpopulations that are less affected by class size. We will examine any differences in conclusions of  the model based on these differing data set
+
+ We will fit a mixed effects model on the data as follows
+ 
+$$
+ Y_{ijk} = \mu_{..} + \alpha_i + \beta_j + \epsilon_{ijk}
+$$
+where the index 𝑖 represents the class type: small (𝑖=1), regular (𝑖=2), regular with aide (𝑖=3),
+
+
+and the index j  represents the school id
+$$
+Y_{ijk} : \text{the mean first grade math score of the students of the } kth \text{ teacher of the } ith \text{ class type, and the } jth \text{ school.}
+$$
+$$
+\mu_{..} : \text{ the population mean teacher-median math score for classes in tenesse } 
+$$
+where
+$$
+\hat{\mu}_{..} = \sum_{i=1 }^{a} \sum_{j=1 }^{b} \frac{\mu_{ij}}{ab}
+$$
+$$
+\mu_{i.} =  \sum_{j=1 }^{b} \frac{\mu_{ij}}{b}
+$$
+$$
+\mu_{.j} = \sum_{i=1 }^{a}\frac{\mu_{ij}}{a}
+$$
+
+$$
+\alpha_i : \text{the factor effect of class type }  i 
+$$
+where 
+$$
+\alpha_i = \mu_{i.} - \mu_{..}
+$$
+$$
+\beta_j : \text{the random effect of school }  j
+$$
+where
+$$
+\beta_j = \mu_{.j} - \mu_{..}
+$$
+
+and
+$$
+\sum_{i=1 }^{3} \alpha_i  = 0
+$$
+
+***
+
+$$
+\epsilon_{ijk} \text{~} N(0, \sigma^2) 
+$$
+$$
+\beta_{j} \text{~} N(0, \sigma_{\beta}^2) 
+$$
+
+
+
+$$
+\epsilon_{ijk} \text{ are independent and identically distributed error terms for the teacher mean score of the jth school, ith class type, and kth observation} 
+$$
+$$
+\text{where } [\epsilon_{ijk}] \text{ and } [\beta_j]  \text{are mutually independent}
+$$
+
+
+
+
+***
+
+We will aso fit the same model with the class teacher-median ranks as a reponse variabble. This model retains all the notation of the first mixed model, except as fllowls
+
+
+$$
+rank_{ijk} = \mu_{..} + \alpha_i + \beta_j
+$$
+$$
+rank_{ijk} \text{ is the ranked position of the teacher median math score of the kth replicate in the jth school at aclass size level i}
+$$
+$$
+\beta_{j} \text{~} N(0, \sigma_{\beta}^2) 
+$$
+
+
+***
+```{r,echo=F,results=F,message=F, warning=F}
+
+
+library(lme4)
+
+lm.fit <-lm(tmath1~star1+ as.factor(schoolid1)  ,df)
+
+
+(lm1=lmer(tmath1~as.factor(star1)  + (1|schoolid1)  ,data=df))
+(lm.c=lmer(tmath1~as.factor(star1)  + (1|schoolid1)  ,data=df.c))
+
+
+
+confint(lm1)
+confint(lm.c)
+
+
+
+Anova(lm1, type = 2)
+Anova(lm.c, type = 2)
+
+
+
+```
+***
+We will run a wald test on the both models (dropped missing and imputed). A wald chi-square test is apporpriate for estimating if the fixed effects of a mixed model are 0.
+
+
+***
+
+$$
+H_0 : \alpha_1 = \alpha_2 = \alpha_3  
+$$
+$$
+H_A : \alpha_i \neq \alpha_j  \text{ ; for at least one pair i and j where } i \neq j \text{ and } i , j \text{ } \epsilon (1,2,3)
+$$
+$$
+\alpha_c = 0.05
+$$
+***
+From the result of our two Wald tests. We obtain a p value of 4.9e-10 and 5.1e-10 for the dropped value and imputted data sets, respectively. In both case this is well beneath the critical p value of 0.05, and WE reject the null hypothesis that all factor effect are equal. The effects of the different class types on teacher-mean math scores are probably not all equal.
+***
+
+$$
+P(\alpha_c) > P(\alpha_*) 
+$$
+
+***
+
+Our second question of interest is if we can determine which class type improves mean teacher scores the most. For this question , we will use Tukey’s range test. 
+
+note this test assumes that all observations are independent, that the observations with in each cell are normally distributed, and the within group variance does not vary across groups.
+
+```{r,echo=F,results=F,message=F, warning=F} 
+
+T.ci = lsmeans(lm1, pairwise~as.factor(star1), adjust="tukey")
+par(mfrow=c(1,2))
+plot(T.ci$contrasts, las=0 , col="brown",)
+#axis(2, cex= 0.2 )
+T.ci.c = lsmeans(lm.c, pairwise~as.factor(star1), adjust="tukey")
+par(mfrow=c(1,2))
+plot(T.ci.c$contrasts, las=0 , col="brown", )
+
+
+```
+We can see that it is likely that teacher-median math scores were higher in small classes than either regular classes or regular classes with aides. This is true for both the imputed data set and the dropped cases data set Because the 95% confidence intervals of the small class mean teacher-median score are we separated from the median math scores of the other two groups, we reject the null hypothesis that there is no difference. 
+
+At this confidence level, we fail to reject the null hypothesis that regular classes and regular classes with aide differ in their teacher mean math scores, since the confidence intervals contain 0 in this case. Again this is true for both data sets
+
+
+We will repeat the above tests for the rank test 
+$$
+H_0 : \alpha_1 = \alpha_2 = \alpha_3  
+$$
+$$
+H_A : \alpha_i \neq \alpha_j  \text{ ; for at least one pair i and j where } i \neq j \text{ and } i , j \text{ } \epsilon (1,2,3)
+$$
+$$
+\alpha_c = 0.05
+$$
+
+```{r,echo=F,results=F,message=F, warning=F} 
+df$rank.tmath=rank(df$tmath1)
+df.c$rank.tmath = rank(df.c$tmath1)
+lm.rank <- lmer(rank.tmath~as.factor(star1)+  (1|schoolid1) ,data=df)
+lm.rank.c=lmer(rank.tmath~as.factor(star1)  + (1|schoolid1)  ,data=df.c)
+
+lm.rank
+
+confint(lm.rank)
+Anova(lm.rank)
+
+confint(lm.rank.c)
+Anova(lm.rank.c)
+```
+From the result of our two Wald tests on the rank test data. We obtain a p value of 1.3e-7 and 2.4e-4 for the dropped value and imputted data sets, respectively. In both case this is well beneath the critical p value of 0.05, and WE reject the null hypothesis that all factor effects of class size on teacher median rank are equal. The effects of the different class types on teacher-mean math scores are probably not all equal.
+
+```{r,echo=F,results=F,message=F, warning=F} 
+
+T.ci.r = lsmeans(lm.rank, pairwise~as.factor(star1), adjust="tukey")
+par(mfrow=c(1,2))
+plot(T.ci.r$contrasts, las=0 , col="brown",)
+#axis(2, cex= 0.2 )
+T.ci.c.r = lsmeans(lm.rank.c, pairwise~as.factor(star1), adjust="tukey")
+par(mfrow=c(1,2))
+plot(T.ci.c.r$contrasts, las=0 , col="brown", )
+
+T.ci.r
+T.ci.c.r
+```
+In the contrasts of the rank factor effect of class sizes for the both model with the dropped data we observe the same pattern as with the parametric models. The contrasts of the small class size group with the other two is likely not zero and is the group associated with the highest teacher median math scores.
+
+
+As with our orignal test, the median-teacher score small class size is significantly larger than that of the other two class sizes. The other two groups are not significanlty different. The agreement of our original test conclusions with those of this non-parametric model strengthn the conclusions. Although signinficant heteroscadacticty remains in the data, we beleive that this does not change teh coclusions nor undermine their significance,
+
+
+6) Results
+
+
+
+There were some issues with the randomization of this study. Not every class size was assigned at every school, therefore the probability of treatment assignment is not identical for all students, and there may be some confounders. Furthermore, treatment was not identical. Within each class size assignment, there were different numbers of students possible. The missing data also presents a non random sampling issue.
+The Average causal effect of small classes vs other sized classes on the outcome of teacher-median math score is positive.We see no average causal effect from the presence of aides on this same outcome. This means a 
+
+
+
+***
+
+Sensitvity Analysis
+
+***
+```{r,echo=F,results=F,message=F, warning=F}
+res <- resid(lm1)
+
+
+options(repr.plot.width=12, repr.plot.height=6)
+par(mfrow=c(1,2))
+plot(fitted(lm1), res)
+abline(0,0)
+
+qqnorm(res)
+qqline(res) 
+
+plot(density(res))
+
+
+
+```
+from the above plots we can interpret the validity of our model. The residual vs fitted value plot shows no obvious pattern. It is possible that the magnitude of the residuals decreases  as the fitted value increases. We argue this is caused by a less data at this high end of fitted values.
+
+in order to test the equality of variance assumption we run a Levene test. Where we run an anova on the absolute value of residuals from the the original anova .
+$$
+ r_{ijk} = \mu_{..} + \alpha_i + \beta_j  + \epsilon_{ijk}
+$$
+where r is the absolute value of the residual from the model fit in the data analysis section, and the rest of the assumptions and parameters correspond to those of that model
+
+$$
+H_0 : E[r_{ijk}] = E[r_{ijk}]  \text{ for all i and j and k } 
+$$
+$$
+H_a :  E[r_{ijk}] \neq E[r_{ijk}]  \text{ for atleast on pair of i and j and k} 
+$$
+$$
+\alpha_c = 0.05
+$$
+
+```{r,echo=F,results=F,message=F, warning=F}
+df$res.abs=abs(res)
+
+Anova.res <- Anova(lmer(res.abs~as.factor(star1) +(1|schoolid1) ,data=df))
+
+Anova.res
+
+
+
+shapiro.test(res)
+
+
+```
+from the above results we see that for schoolid 
+$$
+\chi^{2*} > \chi^{2}_{critical}
+$$
+and we reject the null hypothesis that the variance is equal for all levels of alpha (class size)
+
+
+
+We also run a shapiro-wilk test on the residuals from our model. It returns a p-value of 0.02. We can reject the null hypothesis at alpha = 0.05 that these residules are normally distributed.
+
+The shape of the Q-Q plot on the right suggests the teacher means largely follow the normal distribtuion. The tails do contain a few values more extreme than those expected by theoretical quantiles. We see in comparison to the QQ plot of our intial fixed effect model, there is some improvement, particularly in the normality of the high end values
+
+
+
+
+
+
+
+
+
+
+***
+Normality of the Beta terms
+
+We must also investigate the normality of the beta terms, since we model them as a random effect.
+
+```{r,echo=F,results=F,message=F, warning=F}
+
+
+
+  
+
+
+betas.rand <- ranef(lm1)$schoolid1[,1]
+
+options(repr.plot.width=12, repr.plot.height=6)
+par(mfrow=c(1,2))
+plot(betas.rand)
+abline(0,0)
+
+qqnorm(betas.rand)
+qqline(betas.rand) 
+
+plot(density(betas.rand))
+
+shapiro.test(betas.rand)
+```
+
+Conclude your analysis with a discussion.
+
+	Our analysis here ultimately supports the initial analysis.
+	More careful handling of missing data ultimately did not affect the conclusions. Neither did the introduction of random effects in order to estimate school id factor effects, which strengthens our conclusions. However the design of our model prevented us from directly including these variables associated with missing scores in our model. Student based variables were difficult to transform into class based metrics. Instead we compared a MCAR assumption (dropping all missing data) with a more pessimistic model imputation model. The agreement of conclusions among these two data sets seems to support our conclusion that small class sizes are associated with with math score in first grade. However the strong association of missing score with some student populations raises concerns about the representatives of our data. Claims that small classes raise math scores on average for students of those subpopulatuions are less supported.
+	Our investigation of heterogeneity relied on an additional fitting of our model on the rank of teacher-median math scores. The change of the school id term from a fixed effect to a random effect did improve the normality of the residules mildly. However the assumptions of normality of error terms and equal variance of the error terms were both porbably still violated. Fitting the models on rank eliminated the assumption of normality and equal variance. The agreement of the parametric and non-parametric models strengthens our conclusions. 
+	From the agreement of all our model we are confident that it is likely that class size affects standardized math scores in first grade. Specifically that small class sizes are associated with the highest math scores. 
+	The issue of causal effect remains somewhat in doubt. The issue of non-compliance undermines the direction of the association. Is it possible that students that were more likely to do well were more likely to switch to smaller class? including a compliance variate in our model would help alleviate this issue. This is an issue for further analysis of this data set.
+
+# Code Appendix
+```{r getlabels, echo = FALSE}
+labs = knitr::all_labels()
+labs = labs[!labs %in% c("setup","getlabels","allcode")]
+```
+
+```{r allcode, ref.label = labs, eval = FALSE}
+```
+
+
+```{r}
+sessionInfo()
+```
+## Acknowledgement {-}
+the code used above is borrowed extensively, with some modifications, from those by Chen Shizhe, presented in the class materials found at https://nbviewer.org/github/ChenShizhe/StatDataScience/blob/master/Notes/Chapter4ANOVA.ipynb
+
+some code also modified from sources on https://www.statology.org/reorder-boxplot-in-r/
+
+## Session information {-}
